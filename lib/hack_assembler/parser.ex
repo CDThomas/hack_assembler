@@ -6,7 +6,18 @@ defmodule HackAssembler.Parser do
     defstruct [:address]
   end
 
-  @type result :: AInstruction.t() | nil
+  defmodule CInstruction do
+    @type t :: %__MODULE__{
+            comp: binary(),
+            dest: binary() | nil,
+            jump: binary() | nil
+          }
+
+    @enforce_keys [:comp]
+    defstruct [:comp, :dest, :jump]
+  end
+
+  @type result :: AInstruction.t() | CInstruction.t() | nil
 
   @type error_reason :: :invalid_address
   @type parser_error :: {:error, error_reason()}
@@ -29,6 +40,27 @@ defmodule HackAssembler.Parser do
   defp do_parse("@" <> rest) do
     with {:ok, address} <- parse_address(rest) do
       {:ok, %AInstruction{address: address}}
+    end
+  end
+
+  defp do_parse(line) do
+    {dest, rest} = parse_dest(line)
+    {comp, jump} = parse_comp_and_jump(rest)
+
+    {:ok, %CInstruction{comp: comp, dest: dest, jump: jump}}
+  end
+
+  defp parse_dest(line) do
+    case String.split(line, "=") do
+      [dest, rest] -> {dest, rest}
+      [rest] -> {nil, rest}
+    end
+  end
+
+  defp parse_comp_and_jump(line) do
+    case String.split(line, ";") do
+      [comp, jump] -> {comp, jump}
+      [comp] -> {comp, nil}
     end
   end
 

@@ -3,6 +3,7 @@ defmodule HackAssembler.ParserTest do
 
   alias HackAssembler.Parser
   alias HackAssembler.Parser.AInstruction
+  alias HackAssembler.Parser.CInstruction
 
   describe "parsing A-instructions" do
     test "returns an AInstruction given a positive integer" do
@@ -20,9 +21,19 @@ defmodule HackAssembler.ParserTest do
     # TODO: symbols
   end
 
-  # describe "parsing C-instructions" do
-  #   # TODO
-  # end
+  describe "parsing C-instructions" do
+    test "returns a CInstruction given dest an comp" do
+      {:ok, instruction} = Parser.parse("M=1")
+      assert instruction == %CInstruction{comp: "1", dest: "M", jump: nil}
+    end
+
+    test "returns a CInstruction given comp and jump" do
+      {:ok, instruction} = Parser.parse("0;JMP")
+      assert instruction == %CInstruction{comp: "0", dest: nil, jump: "JMP"}
+    end
+
+    # TODO: symbols
+  end
 
   describe "parsing comments" do
     test "returns nil" do
