@@ -43,6 +43,10 @@ defmodule HackAssembler.ParserTest do
     test "returns nil when there is leading whitespace" do
       assert Parser.parse("  // Leading whitespace\n") == {:ok, nil}
     end
+
+    test "returns the insctruction given an inline comment" do
+      assert {:ok, %AInstruction{}} = Parser.parse("@0 // Comment\n")
+    end
   end
 
   describe "parsing whitespace" do

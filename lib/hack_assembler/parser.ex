@@ -25,15 +25,16 @@ defmodule HackAssembler.Parser do
   @spec parse(line :: binary()) :: {:ok, result()} | parser_error()
   def parse(line) do
     line
+    |> trim_comment()
     |> String.trim()
     |> do_parse()
   end
 
-  defp do_parse("") do
-    {:ok, nil}
+  defp trim_comment(line) do
+    String.replace(line, ~r/\/\/.*/, "")
   end
 
-  defp do_parse("//" <> _) do
+  defp do_parse("") do
     {:ok, nil}
   end
 
