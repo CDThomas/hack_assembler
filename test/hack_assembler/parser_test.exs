@@ -32,13 +32,19 @@ defmodule HackAssembler.ParserTest do
   #   end
   # end
 
-  # describe "parsing whitespace" do
-  #   test "returns nil for newlines" do
-  #   end
+  describe "parsing whitespace" do
+    test "returns nil for newlines" do
+      assert Parser.parse("\n") == {:ok, nil}
+    end
 
-  #   test "returns nil for tabs and spaces" do
-  #   end
-  # end
+    test "returns nil for tabs and spaces" do
+      assert Parser.parse("\t \n") == {:ok, nil}
+    end
+
+    test "ignores leading and trailing whitespace in instructions" do
+      assert {:ok, %AInstruction{}} = Parser.parse("  @123\n")
+    end
+  end
 
   # describe "parsing labels" do
   # end

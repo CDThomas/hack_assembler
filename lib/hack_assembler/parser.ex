@@ -6,11 +6,22 @@ defmodule HackAssembler.Parser do
     defstruct [:address]
   end
 
+  @type result :: AInstruction.t() | nil
   @type error_reason :: :invalid_address
   @type parser_error :: {:error, error_reason()}
 
-  @spec parse(line :: binary()) :: {:ok, AInstruction.t()} | parser_error()
-  def parse("@" <> rest) do
+  @spec parse(line :: binary()) :: {:ok, result()} | parser_error()
+  def parse(line) do
+    line
+    |> String.trim()
+    |> do_parse()
+  end
+
+  defp do_parse("") do
+    {:ok, nil}
+  end
+
+  defp do_parse("@" <> rest) do
     with {:ok, address} <- parse_address(rest) do
       {:ok, %AInstruction{address: address}}
     end
