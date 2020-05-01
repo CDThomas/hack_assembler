@@ -24,13 +24,15 @@ defmodule HackAssembler.ParserTest do
   #   # TODO
   # end
 
-  # describe "parsing comments" do
-  #   test "returns nil" do
-  #   end
+  describe "parsing comments" do
+    test "returns nil" do
+      assert Parser.parse("// This is a comment\n") == {:ok, nil}
+    end
 
-  #   test "returns nil when there is leading whitespace" do
-  #   end
-  # end
+    test "returns nil when there is leading whitespace" do
+      assert Parser.parse("  // Leading whitespace\n") == {:ok, nil}
+    end
+  end
 
   describe "parsing whitespace" do
     test "returns nil for newlines" do

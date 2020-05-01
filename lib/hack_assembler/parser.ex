@@ -7,6 +7,7 @@ defmodule HackAssembler.Parser do
   end
 
   @type result :: AInstruction.t() | nil
+
   @type error_reason :: :invalid_address
   @type parser_error :: {:error, error_reason()}
 
@@ -18,6 +19,10 @@ defmodule HackAssembler.Parser do
   end
 
   defp do_parse("") do
+    {:ok, nil}
+  end
+
+  defp do_parse("//" <> _) do
     {:ok, nil}
   end
 
