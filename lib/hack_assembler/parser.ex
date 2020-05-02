@@ -17,12 +17,12 @@ defmodule HackAssembler.Parser do
     defstruct [:comp, :dest, :jump]
   end
 
-  @type result :: AInstruction.t() | CInstruction.t() | nil
+  @type instruction :: AInstruction.t() | CInstruction.t()
 
   @type error_reason :: :invalid_address
   @type parser_error :: {:error, error_reason()}
 
-  @spec parse(line :: binary()) :: {:ok, result()} | parser_error()
+  @spec parse(line :: binary()) :: {:ok, instruction() | nil} | parser_error()
   def parse(line) do
     line
     |> trim_comment()
