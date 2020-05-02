@@ -60,7 +60,7 @@ defmodule HackAssembler.Code do
     "JMP" => "111"
   }
 
-  @spec to_hack(instruction :: Parser.instuction()) :: binary()
+  @spec to_hack(instruction :: Parser.instruction()) :: binary()
   def to_hack(%AInstruction{address: address}) do
     address_in_hack =
       address
