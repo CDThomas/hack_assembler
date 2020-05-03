@@ -1,8 +1,12 @@
 defmodule Mix.Tasks.Assemble do
   use Mix.Task
 
-  alias HackAssembler.Parser
   alias HackAssembler.Code
+  alias HackAssembler.Parser
+  alias HackAssembler.Parser.AInstruction
+  alias HackAssembler.Parser.CInstruction
+  alias HackAssembler.Parser.Label
+  alias HackAssembler.SymbolTable
 
   @output_extension ".hack"
 
@@ -11,24 +15,57 @@ defmodule Mix.Tasks.Assemble do
     rootname = Path.rootname(input_file, ".asm")
     output_file = File.open!(rootname <> @output_extension, [:write])
 
+    {symbol_table, _} =
+      input_file
+      |> File.stream!()
+      |> Enum.reduce({SymbolTable.new(), 0}, fn line, {symbol_table, count} ->
+        case Parser.parse(line) do
+          {:ok, %Label{name: name}} ->
+            {SymbolTable.put_label(symbol_table, name, count), count}
+
+          {:ok, nil} ->
+            {symbol_table, count}
+
+          {:ok, _} ->
+            {symbol_table, count + 1}
+
+          {:error, _} = error ->
+            Mix.raise(inspect(error))
+        end
+      end)
+
     input_file
     |> File.stream!()
-    |> Stream.each(&assemble_line(&1, output_file))
-    |> Stream.run()
+    |> Enum.reduce({symbol_table, 0}, fn line, {symbol_table, count} ->
+      case Parser.parse(line) do
+        {:ok, %Label{}} ->
+          {symbol_table, count}
+
+        {:ok, %AInstruction{address: address} = instruction} ->
+          case address do
+            address when is_integer(address) ->
+              IO.puts(output_file, Code.to_hack(instruction))
+              {symbol_table, count + 1}
+
+            address when is_binary(address) ->
+              {symbol_table, value} = SymbolTable.get_var(symbol_table, address)
+              updated_instruction = %{instruction | address: value}
+              IO.puts(output_file, Code.to_hack(updated_instruction))
+              {symbol_table, count + 1}
+          end
+
+        {:ok, %CInstruction{} = instruction} ->
+          IO.puts(output_file, Code.to_hack(instruction))
+          {symbol_table, count + 1}
+
+        {:ok, nil} ->
+          {symbol_table, count}
+
+        {:error, _} = error ->
+          Mix.raise(inspect(error))
+      end
+    end)
 
     File.close(output_file)
-  end
-
-  defp assemble_line(line, output_file) do
-    case Parser.parse(line) do
-      {:ok, instruction} when not is_nil(instruction) ->
-        IO.puts(output_file, Code.to_hack(instruction))
-
-      {:ok, nil} ->
-        :noop
-
-      {:error, _} = error ->
-        Mix.shell().error(inspect(error))
-    end
   end
 end

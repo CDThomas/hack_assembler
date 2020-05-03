@@ -39,8 +39,23 @@ defmodule HackAssembler.SymbolTableTest do
 
   describe "putting a new symbols in the table" do
     test "adds the symbols to the table with its value" do
-      %SymbolTable{symbols: symbols} = SymbolTable.put(SymbolTable.new(), "LOOP", 10)
+      %SymbolTable{symbols: symbols} = SymbolTable.put_label(SymbolTable.new(), "LOOP", 10)
       assert symbols["LOOP"] == 10
+    end
+  end
+
+  describe "getting a variable" do
+    test "gets the value for symbols that are already defined" do
+      {_, value} = SymbolTable.get_var(SymbolTable.new(), "R0")
+      assert value == 0
+    end
+
+    test "adds new symbols and updates the next address for symbols that aren't defined" do
+      {symbol_table, value} = SymbolTable.get_var(SymbolTable.new(), "i")
+
+      assert value == 16
+      assert symbol_table.next_address == 17
+      assert Map.has_key?(symbol_table.symbols, "i")
     end
   end
 end

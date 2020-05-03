@@ -1,6 +1,6 @@
 defmodule HackAssembler.Parser do
   defmodule AInstruction do
-    @type t :: %__MODULE__{address: non_neg_integer()}
+    @type t :: %__MODULE__{address: non_neg_integer() | binary()}
 
     @enforce_keys [:address]
     defstruct [:address]
@@ -81,6 +81,7 @@ defmodule HackAssembler.Parser do
   defp parse_address(address) do
     case Integer.parse(address) do
       {address, ""} when address >= 0 -> {:ok, address}
+      :error -> {:ok, address}
       _ -> {:error, :invalid_address}
     end
   end
