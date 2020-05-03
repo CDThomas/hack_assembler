@@ -17,12 +17,20 @@ defmodule HackAssembler.Parser do
     defstruct [:comp, :dest, :jump]
   end
 
+  defmodule Label do
+    @type t :: %__MODULE__{name: binary()}
+
+    @enforce_keys [:name]
+    defstruct [:name]
+  end
+
   @type instruction :: AInstruction.t() | CInstruction.t()
+  @type result :: instruction | Label.t() | nil
 
   @type error_reason :: :invalid_address
   @type parser_error :: {:error, error_reason()}
 
-  @spec parse(line :: binary()) :: {:ok, instruction() | nil} | parser_error()
+  @spec parse(line :: binary()) :: {:ok, result()} | parser_error()
   def parse(line) do
     line
     |> trim_comment()
@@ -42,6 +50,11 @@ defmodule HackAssembler.Parser do
     with {:ok, address} <- parse_address(rest) do
       {:ok, %AInstruction{address: address}}
     end
+  end
+
+  defp do_parse("(" <> rest) do
+    name = String.trim(rest, ")")
+    {:ok, %Label{name: name}}
   end
 
   defp do_parse(line) do

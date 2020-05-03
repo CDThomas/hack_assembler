@@ -4,6 +4,7 @@ defmodule HackAssembler.ParserTest do
   alias HackAssembler.Parser
   alias HackAssembler.Parser.AInstruction
   alias HackAssembler.Parser.CInstruction
+  alias HackAssembler.Parser.Label
 
   describe "parsing A-instructions" do
     test "returns an AInstruction given a positive integer" do
@@ -33,6 +34,13 @@ defmodule HackAssembler.ParserTest do
     end
 
     # TODO: symbols
+  end
+
+  describe "parsing labels" do
+    test "returns a Label" do
+      {:ok, label} = Parser.parse("(END)")
+      assert label == %Label{name: "END"}
+    end
   end
 
   describe "parsing comments" do
