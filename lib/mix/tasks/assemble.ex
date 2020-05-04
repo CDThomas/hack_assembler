@@ -35,9 +35,11 @@ defmodule Mix.Tasks.Assemble do
           symbol_table
 
         {:ok, %AInstruction{} = instruction} ->
-          {symbol_table, instruction} = resolve_symbolic_address(instruction, symbol_table)
+          {instruction, updated_symbol_table} =
+            resolve_symbolic_address(instruction, symbol_table)
+
           IO.puts(output_file, Code.to_hack(instruction))
-          symbol_table
+          updated_symbol_table
 
         {:ok, %CInstruction{} = instruction} ->
           IO.puts(output_file, Code.to_hack(instruction))
@@ -73,14 +75,14 @@ defmodule Mix.Tasks.Assemble do
 
   defp resolve_symbolic_address(%AInstruction{address: address} = instruction, symbol_table)
        when is_binary(address) do
-    {symbol_table, value} = SymbolTable.get_symbol(symbol_table, address)
+    {updated_symbol_table, value} = SymbolTable.get_symbol(symbol_table, address)
     instruction = %{instruction | address: value}
 
-    {symbol_table, instruction}
+    {instruction, updated_symbol_table}
   end
 
   defp resolve_symbolic_address(%AInstruction{address: address} = instruction, symbol_table)
        when is_integer(address) do
-    {symbol_table, instruction}
+    {instruction, symbol_table}
   end
 end
