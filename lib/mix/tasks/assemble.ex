@@ -18,21 +18,10 @@ defmodule Mix.Tasks.Assemble do
     {symbol_table, _} =
       input_file
       |> File.stream!()
-      |> Enum.reduce({SymbolTable.new(), 0}, fn line, {symbol_table, count} ->
-        case Parser.parse(line) do
-          {:ok, %Label{name: name}} ->
-            {SymbolTable.put_symbol(symbol_table, name, count), count}
-
-          {:ok, nil} ->
-            {symbol_table, count}
-
-          {:ok, _} ->
-            {symbol_table, count + 1}
-
-          {:error, _} = error ->
-            Mix.raise(inspect(error))
-        end
-      end)
+      |> Stream.map(&Parser.parse/1)
+      |> Stream.each(&raise_on_error/1)
+      |> Stream.filter(&not_empty?/1)
+      |> Enum.reduce({SymbolTable.new(), 0}, &build_label_symbols/2)
 
     input_file
     |> File.stream!()
@@ -67,5 +56,25 @@ defmodule Mix.Tasks.Assemble do
     end)
 
     File.close(output_file)
+  end
+
+  defp raise_on_error({:error, _} = error) do
+    Mix.raise(inspect(error))
+  end
+
+  defp raise_on_error({:ok, _} = instruction) do
+    instruction
+  end
+
+  defp not_empty?({:ok, instruction}) do
+    not is_nil(instruction)
+  end
+
+  defp build_label_symbols({:ok, %Label{name: name}}, {symbol_table, count}) do
+    {SymbolTable.put_symbol(symbol_table, name, count), count}
+  end
+
+  defp build_label_symbols({:ok, _}, {symbol_table, count}) do
+    {symbol_table, count + 1}
   end
 end
