@@ -1,8 +1,8 @@
 defmodule HackAssembler.SymbolTable do
-  @type t :: %__MODULE__{symbols: map()}
+  @type t :: %__MODULE__{symbols: map(), next_address: non_neg_integer()}
 
-  @enforce_keys [:symbols]
-  defstruct [:symbols]
+  @enforce_keys [:symbols, :next_address]
+  defstruct [:symbols, :next_address]
 
   @predefined_symbols %{
     "R0" => 0,
@@ -32,11 +32,26 @@ defmodule HackAssembler.SymbolTable do
 
   @spec new :: t()
   def new do
-    %__MODULE__{symbols: @predefined_symbols}
+    %__MODULE__{symbols: @predefined_symbols, next_address: 16}
   end
 
-  @spec put(symbol_table :: t(), symbol :: binary(), value :: non_neg_integer) :: t()
-  def put(%__MODULE__{symbols: symbols} = symbol_table, symbol, value) do
+  @spec put_symbol(symbol_table :: t(), symbol :: binary(), value :: non_neg_integer) :: t()
+  def put_symbol(%__MODULE__{symbols: symbols} = symbol_table, symbol, value) do
     %{symbol_table | symbols: Map.put(symbols, symbol, value)}
+  end
+
+  @spec get_symbol(symbol_table :: t(), symbol :: binary) ::
+          {symbol_table :: t(), value :: non_neg_integer()}
+  def get_symbol(%__MODULE__{symbols: symbols, next_address: next_address} = symbol_table, symbol) do
+    if Map.has_key?(symbols, symbol) do
+      {symbol_table, symbols[symbol]}
+    else
+      updated_symbol_table =
+        symbol_table
+        |> put_symbol(symbol, next_address)
+        |> Map.put(:next_address, next_address + 1)
+
+      {updated_symbol_table, next_address}
+    end
   end
 end

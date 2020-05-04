@@ -19,7 +19,9 @@ defmodule HackAssembler.ParserTest do
       assert Parser.parse("@-1") == {:error, :invalid_address}
     end
 
-    # TODO: symbols
+    test "returns an AInstruction given a symbol" do
+      assert Parser.parse("@R0") == {:ok, %AInstruction{address: "R0"}}
+    end
   end
 
   describe "parsing C-instructions" do
