@@ -1,4 +1,12 @@
 defmodule Mix.Tasks.Assemble do
+  @moduledoc """
+  Assembles a given input `.asm` file containing assembly code into a `.hack` file containing Hack machine code.
+
+  Usage:
+    ```
+    mix assemble example.asm
+    ```
+  """
   use Mix.Task
 
   alias HackAssembler.Code

@@ -1,4 +1,12 @@
 defmodule HackAssembler.SymbolTable do
+  @moduledoc """
+  A data structure for keeping track of symbols used in a Hack assembly program.
+
+  Symbols include predefined symbols (e.g. `R0`), labels (e.g. `(LOOP)`), and variables (e.g. `@i`).
+
+  Symbols are stored in a `Map` in under the `symbols` property. `next_address` is used internally to keep track of the next available address to use for variables.
+  """
+
   @type t :: %__MODULE__{symbols: map(), next_address: non_neg_integer()}
 
   @enforce_keys [:symbols, :next_address]
@@ -30,16 +38,31 @@ defmodule HackAssembler.SymbolTable do
     "THAT" => 4
   }
 
+  @doc "Returns a new symbol table containing the predefined symbols."
   @spec new :: t()
   def new do
     %__MODULE__{symbols: @predefined_symbols, next_address: 16}
   end
 
+  @doc """
+  Puts `symbol` in the given `symbol_table` with the value `value`.
+
+  Returns the updated symbol table.
+
+  This is used for adding labels to the symbol table.
+  """
   @spec put_symbol(symbol_table :: t(), symbol :: binary(), value :: non_neg_integer) :: t()
   def put_symbol(%__MODULE__{symbols: symbols} = symbol_table, symbol, value) do
     %{symbol_table | symbols: Map.put(symbols, symbol, value)}
   end
 
+  @doc """
+  Gets `symbol` from the given `symbol_table`. If the symbol is new, the symbol will be added to the symbol table with the next available address (starting at RAM[16]).
+
+  Returns a tuple containing the symbol table and the address of the symbol.
+
+  This is used for getting and adding variables.
+  """
   @spec get_symbol(symbol_table :: t(), symbol :: binary) ::
           {symbol_table :: t(), value :: non_neg_integer()}
   def get_symbol(%__MODULE__{symbols: symbols, next_address: next_address} = symbol_table, symbol) do

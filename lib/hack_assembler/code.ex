@@ -1,4 +1,8 @@
 defmodule HackAssembler.Code do
+  @moduledoc """
+  Translates the internal representation of A-instructions and C-instructions to Hack machine code.
+  """
+
   alias HackAssembler.Parser
   alias HackAssembler.Parser.AInstruction
   alias HackAssembler.Parser.CInstruction
@@ -60,6 +64,9 @@ defmodule HackAssembler.Code do
     "JMP" => "111"
   }
 
+  @doc """
+  Returns binary machine code as a string given a `HackAssembler.Parser.AInstruction` or `HackAssembler.Parser.CInstruction`.
+  """
   @spec to_hack(instruction :: Parser.instruction()) :: binary()
   def to_hack(%AInstruction{address: address}) do
     address_in_hack =

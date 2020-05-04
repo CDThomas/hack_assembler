@@ -1,4 +1,8 @@
 defmodule HackAssembler.Parser do
+  @moduledoc """
+  Parses Hack assembly (mnemonic) code into an internal representation of instructions. These instructions are later translated by `HackAssembler.Code.to_hack/1` to Hack machine (binary) code.
+  """
+
   defmodule AInstruction do
     @type t :: %__MODULE__{address: non_neg_integer() | binary()}
 
@@ -30,6 +34,17 @@ defmodule HackAssembler.Parser do
   @type error_reason :: :invalid_address
   @type parser_error :: {:error, error_reason()}
 
+  @doc """
+  Returns an internal representation of an instruction (wrapped in an `:ok` tuple) given a line of Hack assembly code.
+
+  Returns `HackAssembler.Parser.AInstruction` or `HackAssembler.Parser.CInstruction` for A-instructions and C-instructions.
+
+  Returns `HackAssembler.Parser.Label` for labels.
+
+  Returns `nil` for empty instructions (e.g. whitespace and comments).
+
+  Returns an `:error` tuple if there is an error parsing the instruction.
+  """
   @spec parse(line :: binary()) :: {:ok, result()} | parser_error()
   def parse(line) do
     line
