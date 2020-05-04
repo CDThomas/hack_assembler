@@ -35,25 +35,23 @@ defmodule HackAssembler.SymbolTable do
     %__MODULE__{symbols: @predefined_symbols, next_address: 16}
   end
 
-  @spec put_label(symbol_table :: t(), symbol :: binary(), value :: non_neg_integer) :: t()
-  def put_label(%__MODULE__{symbols: symbols} = symbol_table, symbol, value) do
+  @spec put_symbol(symbol_table :: t(), symbol :: binary(), value :: non_neg_integer) :: t()
+  def put_symbol(%__MODULE__{symbols: symbols} = symbol_table, symbol, value) do
     %{symbol_table | symbols: Map.put(symbols, symbol, value)}
   end
 
-  @spec get_var(symbol_table :: t(), symbol :: binary) ::
+  @spec get_symbol(symbol_table :: t(), symbol :: binary) ::
           {symbol_table :: t(), value :: non_neg_integer()}
-  def get_var(%__MODULE__{symbols: symbols, next_address: next_address} = symbol_table, symbol) do
+  def get_symbol(%__MODULE__{symbols: symbols, next_address: next_address} = symbol_table, symbol) do
     if Map.has_key?(symbols, symbol) do
       {symbol_table, symbols[symbol]}
     else
-      symbols = Map.put(symbols, symbol, next_address)
-
-      symbol_table =
+      updated_symbol_table =
         symbol_table
-        |> Map.put(:symbols, symbols)
+        |> put_symbol(symbol, next_address)
         |> Map.put(:next_address, next_address + 1)
 
-      {symbol_table, next_address}
+      {updated_symbol_table, next_address}
     end
   end
 end

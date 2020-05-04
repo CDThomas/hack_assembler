@@ -21,7 +21,7 @@ defmodule Mix.Tasks.Assemble do
       |> Enum.reduce({SymbolTable.new(), 0}, fn line, {symbol_table, count} ->
         case Parser.parse(line) do
           {:ok, %Label{name: name}} ->
-            {SymbolTable.put_label(symbol_table, name, count), count}
+            {SymbolTable.put_symbol(symbol_table, name, count), count}
 
           {:ok, nil} ->
             {symbol_table, count}
@@ -42,13 +42,13 @@ defmodule Mix.Tasks.Assemble do
           {symbol_table, count}
 
         {:ok, %AInstruction{address: address} = instruction} ->
-          case address do
-            address when is_integer(address) ->
+          cond do
+            is_integer(address) ->
               IO.puts(output_file, Code.to_hack(instruction))
               {symbol_table, count + 1}
 
-            address when is_binary(address) ->
-              {symbol_table, value} = SymbolTable.get_var(symbol_table, address)
+            is_binary(address) ->
+              {symbol_table, value} = SymbolTable.get_symbol(symbol_table, address)
               updated_instruction = %{instruction | address: value}
               IO.puts(output_file, Code.to_hack(updated_instruction))
               {symbol_table, count + 1}
