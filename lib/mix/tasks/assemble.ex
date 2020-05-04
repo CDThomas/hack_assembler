@@ -8,14 +8,15 @@ defmodule Mix.Tasks.Assemble do
   alias HackAssembler.Parser.Label
   alias HackAssembler.SymbolTable
 
+  @input_extension ".asm"
   @output_extension ".hack"
 
   @impl Mix.Task
   def run([input_file]) do
-    rootname = Path.rootname(input_file, ".asm")
+    rootname = Path.rootname(input_file, @input_extension)
     output_file = File.open!(rootname <> @output_extension, [:write])
 
-    {symbol_table, _} =
+    {symbol_table, _instruction_count} =
       input_file
       |> File.stream!()
       |> Stream.map(&Parser.parse/1)
@@ -28,19 +29,19 @@ defmodule Mix.Tasks.Assemble do
     |> Stream.map(&Parser.parse/1)
     |> Stream.each(&raise_on_error!/1)
     |> Stream.filter(&not_empty?/1)
-    |> Enum.reduce({symbol_table, 0}, fn instruction, {symbol_table, count} ->
+    |> Enum.reduce(symbol_table, fn instruction, symbol_table ->
       case instruction do
         {:ok, %Label{}} ->
-          {symbol_table, count}
+          symbol_table
 
         {:ok, %AInstruction{} = instruction} ->
           {symbol_table, instruction} = resolve_symbolic_address(instruction, symbol_table)
           IO.puts(output_file, Code.to_hack(instruction))
-          {symbol_table, count + 1}
+          symbol_table
 
         {:ok, %CInstruction{} = instruction} ->
           IO.puts(output_file, Code.to_hack(instruction))
-          {symbol_table, count + 1}
+          symbol_table
       end
     end)
 
@@ -59,12 +60,15 @@ defmodule Mix.Tasks.Assemble do
     not is_nil(instruction)
   end
 
-  defp build_label_symbols({:ok, %Label{name: name}}, {symbol_table, count}) do
-    {SymbolTable.put_symbol(symbol_table, name, count), count}
+  defp build_label_symbols({:ok, %Label{name: name}}, {symbol_table, instruction_count}) do
+    {
+      SymbolTable.put_symbol(symbol_table, name, instruction_count),
+      instruction_count
+    }
   end
 
-  defp build_label_symbols({:ok, _}, {symbol_table, count}) do
-    {symbol_table, count + 1}
+  defp build_label_symbols({:ok, _}, {symbol_table, instruction_count}) do
+    {symbol_table, instruction_count + 1}
   end
 
   defp resolve_symbolic_address(%AInstruction{address: address} = instruction, symbol_table)
